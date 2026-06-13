@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rich Off Futures – Gen 1 Boot Camp</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:  #0A0F1E;
+    --navy2: #0D1526;
+    --gold:  #D4A017;
+    --gold2: #F0C040;
+    --cyan:  #00D4FF;
+    --white: #F0EEE8;
+    --dim:   #7A8290;
+    --red:   #FF4444;
+    --green: #00C878;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ══ VIEWS ══ */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ══ SIGNUP PAGE ══ */
+  .signup-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(150deg, #0D1930 0%, #081508 55%, #0C1A06 100%);
+    padding: 52px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(212,160,23,0.2);
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 14px;
+    position: relative; z-index: 1;
+  }
+  .brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 18vw, 120px);
+    line-height: 0.85;
+    position: relative; z-index: 1;
+  }
+  .brand .l1 { color: var(--white); display: block; }
+  .brand .l2 { color: var(--gold); display: block; }
+  .brand .l3 { color: transparent; -webkit-text-stroke: 1.5px rgba(240,192,64,0.4); display: block; }
+  .tagline {
+    margin-top: 16px;
+    font-size: 11px; font-weight: 300;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim);
+    position: relative; z-index: 1;
+  }
+
+  /* Seats counter */
+  .seats-bar {
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 100%);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    flex-wrap: wrap;
+  }
+  .seats-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px; color: var(--navy); line-height: 1;
+  }
+  .seats-info { text-align: left; }
+  .seats-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(10,15,30,0.65);
+    display: block;
+  }
+  .seats-sub {
+    font-size: 11px; color: rgba(10,15,30,0.5);
+  }
+  .slots-visual { display: flex; gap: 5px; align-items: center; }
+  .sv { width: 24px; height: 8px; border-radius: 1px; }
+  .sv.filled { background: rgba(10,15,30,0.5); }
+  .sv.open   { background: rgba(10,15,30,0.15); border: 1px solid rgba(10,15,30,0.3); }
+
+  /* Body */
+  .signup-body {
+    flex: 1;
+    padding: 40px 24px 60px;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .section-lbl {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .section-lbl::after { content: ''; flex: 1; height: 1px; background: rgba(212,160,23,0.2); }
+
+  /* Perks */
+  .perks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 36px; }
+  .perk {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-left: 2.5px solid var(--gold);
+    padding: 12px 14px;
+  }
+  .perk-icon { font-size: 16px; display: block; margin-bottom: 4px; }
+  .perk-title { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--white); margin-bottom: 2px; }
+  .perk-desc  { font-size: 10px; color: var(--dim); line-height: 1.45; }
+
+  /* Form */
+  .form-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(212,160,23,0.2);
+    padding: 28px 24px;
+    margin-bottom: 20px;
+  }
+  .form-head {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 900;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .form-sub { font-size: 12px; color: var(--dim); margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+  .field input::placeholder { color: var(--dim); font-size: 13px; }
+  .field input:focus { border-color: var(--gold); }
+
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 100%);
+    color: var(--navy);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    padding: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 4px;
+  }
+  .submit-btn:hover { opacity: 0.88; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .form-disclaimer { font-size: 10px; color: var(--dim); text-align: center; margin-top: 12px; line-height: 1.5; }
+
+  .error-msg { color: var(--red); font-size: 11px; margin-top: 5px; display: none; }
+
+  /* ══ SUCCESS PAGE ══ */
+  .success-page {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    background: linear-gradient(150deg, #0D1930 0%, #081508 55%, #0C1A06 100%);
+  }
+  .success-icon { font-size: 56px; margin-bottom: 20px; }
+  .success-hed {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; color: var(--gold2);
+    line-height: 0.9; margin-bottom: 14px;
+  }
+  .success-body { font-size: 14px; color: var(--dim); line-height: 1.7; max-width: 340px; margin: 0 auto 28px; }
+  .success-body strong { color: var(--white); font-weight: 500; }
+  .cashapp-box {
+    background: rgba(212,160,23,0.08);
+    border: 1px solid rgba(212,160,23,0.3);
+    padding: 20px 32px;
+    margin-bottom: 16px;
+  }
+  .cashapp-label { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+  .cashapp-tag { font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--gold2); letter-spacing: 0.04em; }
+  .cashapp-amt { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .success-note { font-size: 11px; color: var(--dim); line-height: 1.6; max-width: 300px; margin: 0 auto; }
+
+  /* ══ WAITLIST PAGE ══ */
+  .waitlist-page {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    background: linear-gradient(150deg, #0D1930 0%, #081508 55%, #0C1A06 100%);
+  }
+  .waitlist-badge {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    display: inline-block;
+    padding: 6px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 20px;
+  }
+  .waitlist-hed {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(42px, 10vw, 64px);
+    line-height: 0.9; margin-bottom: 16px;
+    color: var(--white);
+  }
+  .waitlist-hed span { color: var(--gold); display: block; }
+  .waitlist-body { font-size: 13px; color: var(--dim); line-height: 1.7; max-width: 340px; margin: 0 auto 32px; }
+  .waitlist-body strong { color: var(--white); font-weight: 500; }
+
+  .waitlist-form {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(212,160,23,0.2);
+    padding: 24px;
+    width: 100%; max-width: 400px;
+    margin: 0 auto;
+  }
+  .waitlist-form-hed { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .wl-submit {
+    width: 100%;
+    background: rgba(212,160,23,0.15);
+    border: 1px solid rgba(212,160,23,0.4);
+    color: var(--gold2);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 0.08em;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 4px;
+  }
+  .wl-submit:hover { background: rgba(212,160,23,0.25); }
+
+  /* ══ ADMIN PAGE ══ */
+  .admin-login {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .admin-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(212,160,23,0.2);
+    padding: 36px 32px;
+    width: 100%; max-width: 360px;
+    text-align: center;
+  }
+  .admin-logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 0.08em; margin-bottom: 6px; }
+  .admin-sub  { font-size: 11px; color: var(--dim); margin-bottom: 24px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .admin-card input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 12px;
+    border-radius: 0;
+    -webkit-appearance: none;
+    text-align: center;
+    letter-spacing: 0.2em;
+  }
+  .admin-card input:focus { border-color: var(--gold); }
+  .admin-btn {
+    width: 100%;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold2) 100%);
+    color: var(--navy);
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 0.08em;
+    padding: 14px;
+    cursor: pointer;
+  }
+  .admin-err { color: var(--red); font-size: 11px; margin-top: 10px; display: none; }
+
+  /* Admin dashboard */
+  .admin-dash { padding: 32px 20px 60px; max-width: 900px; margin: 0 auto; }
+  .dash-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+  .dash-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gold); letter-spacing: 0.05em; }
+  .dash-meta  { font-size: 12px; color: var(--dim); }
+  .logout-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim);
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    padding: 8px 16px; cursor: pointer;
+  }
+  .logout-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Stats row */
+  .dash-stats { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+  .dash-stat {
+    flex: 1; min-width: 120px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 16px 18px;
+    text-align: center;
+  }
+  .ds-num  { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--gold); line-height: 1; display: block; }
+  .ds-lbl  { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+
+  /* Table */
+  .roster-wrap { overflow-x: auto; }
+  .roster {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .roster th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--dim);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(212,160,23,0.2);
+    white-space: nowrap;
+  }
+  .roster td {
+    padding: 13px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--white);
+    vertical-align: middle;
+  }
+  .roster tr:hover td { background: rgba(255,255,255,0.02); }
+  .roster .seat-num { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: rgba(212,160,23,0.5); }
+  .roster .ig { color: var(--cyan); font-size: 12px; }
+  .roster .phone { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; color: var(--white); }
+  .paid-btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 12px; border: none; cursor: pointer;
+    border-radius: 2px;
+  }
+  .paid-btn.unpaid { background: rgba(212,160,23,0.12); color: var(--gold); border: 1px solid rgba(212,160,23,0.3); }
+  .paid-btn.paid   { background: rgba(0,200,120,0.12); color: var(--green); border: 1px solid rgba(0,200,120,0.3); }
+
+  .empty-roster { text-align: center; padding: 48px 24px; color: var(--dim); font-size: 13px; }
+
+  .cashapp-remind {
+    margin-top: 20px;
+    background: rgba(0,212,255,0.04);
+    border: 1px solid rgba(0,212,255,0.12);
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+  .cr-label { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); white-space: nowrap; }
+  .cr-tag   { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--gold2); }
+  .cr-note  { font-size: 11px; color: var(--dim); flex: 1; }
+
+  /* Admin nav link */
+  .admin-link {
+    position: fixed; bottom: 16px; right: 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(122,130,144,0.3);
+    cursor: pointer; background: none; border: none;
+    z-index: 100;
+  }
+  .admin-link:hover { color: var(--dim); }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SIGNUP VIEW ══════════ -->
+<div id="view-signup" class="view active">
+  <div class="signup-page">
+
+    <div class="hero">
+      <div class="eyebrow">Original Generation · First 10 Only</div>
+      <div class="brand">
+        <span class="l1">Rich</span>
+        <span class="l2">Off</span>
+        <span class="l3">Futures</span>
+      </div>
+      <p class="tagline">Futures Trading Boot Camp &nbsp;·&nbsp; Gen 1</p>
+    </div>
+
+    <div class="seats-bar">
+      <div class="seats-count" id="seats-display">10</div>
+      <div class="seats-info">
+        <span class="seats-label">Seats Remaining</span>
+        <span class="seats-sub">Gen 1 closes permanently at 0</span>
+      </div>
+      <div class="slots-visual" id="slots-visual"></div>
+    </div>
+
+    <div class="signup-body">
+
+      <div class="section-lbl">What's Included</div>
+      <div class="perks">
+        <div class="perk"><span class="perk-icon">📈</span><div class="perk-title">Market Fundamentals</div><div class="perk-desc">How futures move and how to read them.</div></div>
+        <div class="perk"><span class="perk-icon">🖥️</span><div class="perk-title">Live Chart Work</div><div class="perk-desc">Real screen walkthroughs from start to finish.</div></div>
+        <div class="perk"><span class="perk-icon">🎥</span><div class="perk-title">5 Video Sections</div><div class="perk-desc">Multiple lessons — basics to advanced execution.</div></div>
+        <div class="perk"><span class="perk-icon">🤝</span><div class="perk-title">1-on-1 Mentorship</div><div class="perk-desc">Direct access. Ten people only.</div></div>
+        <div class="perk"><span class="perk-icon">♾️</span><div class="perk-title">Lifetime Access</div><div class="perk-desc">Pay once. Keep everything. Forever.</div></div>
+        <div class="perk"><span class="perk-icon">🔐</span><div class="perk-title">Gen 1 Status</div><div class="perk-desc">A title no one else will ever claim.</div></div>
+      </div>
+
+      <div class="section-lbl">Secure Your Seat</div>
+      <div class="form-card">
+        <div class="form-head">Reserve Your Spot — $100 One Time</div>
+        <div class="form-sub">Fill out your info below. You'll get the Cash App payment details on the next screen.</div>
+
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="f-name" placeholder="Your full name" />
+          <div class="error-msg" id="err-name">Please enter your name</div>
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="tel" id="f-phone" placeholder="+1 (000) 000-0000" />
+          <div class="error-msg" id="err-phone">Please enter your phone number</div>
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="f-email" placeholder="you@email.com" />
+          <div class="error-msg" id="err-email">Please enter a valid email</div>
+        </div>
+        <div class="field">
+          <label>Instagram Handle</label>
+          <input type="text" id="f-ig" placeholder="@yourhandle" />
+          <div class="error-msg" id="err-ig">Please enter your Instagram handle</div>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitSignup()">Reserve My Seat →</button>
+        <div class="form-disclaimer">Your spot is reserved once payment is confirmed. $100 one-time fee — no recurring charges.</div>
+      </div>
+
+    </div>
+  </div>
+  <button class="admin-link" onclick="showView('view-admin-login')">admin</button>
+</div>
+
+<!-- ══════════ SUCCESS VIEW ══════════ -->
+<div id="view-success" class="view">
+  <div class="success-page">
+    <div class="success-icon">🔐</div>
+    <div class="success-hed">You're In,<br><span style="color:var(--gold)">Founder.</span></div>
+    <div class="success-body">
+      Your seat has been reserved. To lock it in, send <strong>$100</strong> via Cash App below. Once payment is received you'll be confirmed as a <strong>Gen 1 founding trader</strong>.
+    </div>
+    <div class="cashapp-box">
+      <div class="cashapp-label">Send $100 to</div>
+      <div class="cashapp-tag" id="cashapp-display">$RichOffFutures</div>
+      <div class="cashapp-amt">$100 · One-time · No recurring charges</div>
+    </div>
+    <div class="success-note">Include your Instagram handle in the Cash App payment note so we can confirm you fast. You'll hear back within 24 hours.</div>
+  </div>
+</div>
+
+<!-- ══════════ WAITLIST VIEW ══════════ -->
+<div id="view-waitlist" class="view">
+  <div class="waitlist-page">
+    <div class="waitlist-badge">Gen 1 — Sold Out</div>
+    <div class="waitlist-hed">
+      All 10 Seats
+      <span>Are Taken.</span>
+    </div>
+    <div class="waitlist-body">
+      Gen 1 is officially closed. But Gen 2 is coming — a <strong>funded trader boot camp</strong> for the next 10 people. Drop your info below and you'll be first to know.
+    </div>
+    <div class="waitlist-form">
+      <div class="waitlist-form-hed">Join the Gen 2 Waitlist</div>
+      <div class="field"><label>Full Name</label><input type="text" id="wl-name" placeholder="Your full name" /></div>
+      <div class="field"><label>Instagram Handle</label><input type="text" id="wl-ig" placeholder="@yourhandle" /></div>
+      <div class="field"><label>Email</label><input type="email" id="wl-email" placeholder="you@email.com" /></div>
+      <button class="wl-submit" onclick="submitWaitlist()">Join Gen 2 Waitlist →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN LOGIN VIEW ══════════ -->
+<div id="view-admin-login" class="view">
+  <div class="admin-login">
+    <div class="admin-card">
+      <div class="admin-logo">Rich Off Futures</div>
+      <div class="admin-sub">Admin Access</div>
+      <input type="password" id="admin-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()" />
+      <button class="admin-btn" onclick="adminLogin()">Enter</button>
+      <div class="admin-err" id="admin-err">Incorrect password</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN DASHBOARD VIEW ══════════ -->
+<div id="view-admin-dash" class="view">
+  <div class="admin-dash">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">Gen 1 Roster</div>
+        <div class="dash-meta">Rich Off Futures Boot Camp · Founding 10</div>
+      </div>
+      <button class="logout-btn" onclick="adminLogout()">Log Out</button>
+    </div>
+
+    <div class="dash-stats">
+      <div class="dash-stat"><span class="ds-num" id="stat-signed">0</span><span class="ds-lbl">Signed Up</span></div>
+      <div class="dash-stat"><span class="ds-num" id="stat-paid">0</span><span class="ds-lbl">Paid</span></div>
+      <div class="dash-stat"><span class="ds-num" id="stat-remaining">10</span><span class="ds-lbl">Seats Left</span></div>
+    </div>
+
+    <div class="cashapp-remind">
+      <span class="cr-label">Your Cash App</span>
+      <span class="cr-tag" id="cashapp-remind-display">$RichOffFutures</span>
+      <span class="cr-note">When someone signs up, DM them on IG or text them to confirm payment was received.</span>
+    </div>
+
+    <div class="roster-wrap" style="margin-top: 20px;">
+      <table class="roster">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Instagram</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="roster-body"></tbody>
+      </table>
+      <div class="empty-roster" id="empty-msg">No signups yet. Share your link to get started.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG — change these ──
+  const ADMIN_PASSWORD = 'richoff2025';
+  const CASHAPP_TAG    = '$richoffnqtrading';
+  const MAX_SEATS      = 10;
+
+  // ── Storage helpers ──
+  function getSignups() {
+    try { return JSON.parse(localStorage.getItem('rof_signups') || '[]'); } catch(e) { return []; }
+  }
+  function saveSignups(arr) {
+    localStorage.setItem('rof_signups', JSON.stringify(arr));
+  }
+  function getWaitlist() {
+    try { return JSON.parse(localStorage.getItem('rof_waitlist') || '[]'); } catch(e) { return []; }
+  }
+  function saveWaitlist(arr) {
+    localStorage.setItem('rof_waitlist', JSON.stringify(arr));
+  }
+
+  // ── View switcher ──
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ── Init seats display ──
+  function updateSeatsDisplay() {
+    const signups = getSignups();
+    const remaining = Math.max(0, MAX_SEATS - signups.length);
+    document.getElementById('seats-display').textContent = remaining;
+
+    // slots visual
+    const sv = document.getElementById('slots-visual');
+    if (sv) {
+      sv.innerHTML = '';
+      for (let i = 0; i < MAX_SEATS; i++) {
+        const d = document.createElement('div');
+        d.className = 'sv ' + (i < signups.length ? 'filled' : 'open');
+        sv.appendChild(d);
+      }
+    }
+
+    // if full, show waitlist
+    if (remaining === 0) showView('view-waitlist');
+  }
+
+  // ── Set Cash App tag ──
+  function initCashApp() {
+    ['cashapp-display','cashapp-remind-display'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = CASHAPP_TAG;
+    });
+  }
+
+  // ── Signup submit ──
+  function submitSignup() {
+    const name  = document.getElementById('f-name').value.trim();
+    const phone = document.getElementById('f-phone').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const ig    = document.getElementById('f-ig').value.trim();
+
+    let valid = true;
+    [['err-name', name], ['err-phone', phone], ['err-email', email], ['err-ig', ig]].forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!val) { el.style.display = 'block'; valid = false; }
+      else { el.style.display = 'none'; }
+    });
+    if (!valid) return;
+
+    const signups = getSignups();
+    if (signups.length >= MAX_SEATS) { showView('view-waitlist'); return; }
+
+    signups.push({
+      seat: signups.length + 1,
+      name, phone, email,
+      ig: ig.startsWith('@') ? ig : '@' + ig,
+      paid: false,
+      date: new Date().toLocaleDateString()
+    });
+    saveSignups(signups);
+    showView('view-success');
+  }
+
+  // ── Waitlist submit ──
+  function submitWaitlist() {
+    const name  = document.getElementById('wl-name').value.trim();
+    const ig    = document.getElementById('wl-ig').value.trim();
+    const email = document.getElementById('wl-email').value.trim();
+    if (!name || !email) return;
+    const wl = getWaitlist();
+    wl.push({ name, ig: ig.startsWith('@') ? ig : '@' + ig, email, date: new Date().toLocaleDateString() });
+    saveWaitlist(wl);
+    document.querySelector('.waitlist-form').innerHTML = '<div style="padding:20px 0; color:var(--gold2); font-family:\'Bebas Neue\',sans-serif; font-size:24px; letter-spacing:0.05em;">You\'re on the list. 🔥</div><div style="font-size:12px;color:var(--dim);margin-top:6px;">We\'ll hit you when Gen 2 opens.</div>';
+  }
+
+  // ── Admin login ──
+  function adminLogin() {
+    const pass = document.getElementById('admin-pass').value;
+    if (pass === ADMIN_PASSWORD) {
+      document.getElementById('admin-err').style.display = 'none';
+      renderDash();
+      showView('view-admin-dash');
+    } else {
+      document.getElementById('admin-err').style.display = 'block';
+    }
+  }
+  function adminLogout() {
+    document.getElementById('admin-pass').value = '';
+    showView('view-signup');
+  }
+
+  // ── Render dashboard ──
+  function renderDash() {
+    const signups = getSignups();
+    const paid = signups.filter(s => s.paid).length;
+    document.getElementById('stat-signed').textContent = signups.length;
+    document.getElementById('stat-paid').textContent = paid;
+    document.getElementById('stat-remaining').textContent = Math.max(0, MAX_SEATS - signups.length);
+
+    const tbody = document.getElementById('roster-body');
+    const emptyMsg = document.getElementById('empty-msg');
+
+    if (signups.length === 0) {
+      tbody.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    tbody.innerHTML = signups.map((s, i) => `
+      <tr>
+        <td><span class="seat-num">${String(s.seat).padStart(2,'0')}</span></td>
+        <td style="font-weight:500">${s.name}</td>
+        <td><span class="phone">${s.phone}</span></td>
+        <td style="font-size:12px;color:var(--dim)">${s.email}</td>
+        <td><span class="ig">${s.ig}</span></td>
+        <td>
+          <button class="paid-btn ${s.paid ? 'paid' : 'unpaid'}" onclick="togglePaid(${i})">
+            ${s.paid ? '✓ Paid' : 'Unpaid'}
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Toggle paid status ──
+  function togglePaid(i) {
+    const signups = getSignups();
+    signups[i].paid = !signups[i].paid;
+    saveSignups(signups);
+    renderDash();
+  }
+
+  // ── Boot ──
+  initCashApp();
+  updateSeatsDisplay();
+</script>
+
+</body>
+</html>
