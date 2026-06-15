@@ -1,15 +1,5 @@
 <!DOCTYPE html>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script
-const SUPABASE_URL =
-  'https://qpfobewbtynzonsnswhr.supabase.co';
-
-const SUPABASE_ANON_KEY =
-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZm9iZXdidHluem9uc25zd2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzODExODUsImV4cCI6MjA5Njk1NzE4NX0.0a9IsIgyYnXkOGuMxXoavBWu5FML4zmvzJCIGC8iwBQ;
-
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -594,33 +584,18 @@ const supabase = window.supabase.createClient(
   const MAX_SEATS      = 10;
 
   // ── Storage helpers ──
- async function getSignups() {
-  const { data, error } = await supabase
-    .from('signups')
-    .select('*')
-    .order('seat_number');
-
-  if (error) {
-    console.error(error);
-    return [];
+  function getSignups() {
+    try { return JSON.parse(localStorage.getItem('rof_signups') || '[]'); } catch(e) { return []; }
   }
-
-  return data || [];
-}
-
-async function getWaitlist() {
-  const { data, error } = await supabase
-    .from('waitlist')
-    .select('*')
-    .order('created_at');
-
-  if (error) {
-    console.error(error);
-    return [];
+  function saveSignups(arr) {
+    localStorage.setItem('rof_signups', JSON.stringify(arr));
   }
-
-  return data || [];
-}
+  function getWaitlist() {
+    try { return JSON.parse(localStorage.getItem('rof_waitlist') || '[]'); } catch(e) { return []; }
+  }
+  function saveWaitlist(arr) {
+    localStorage.setItem('rof_waitlist', JSON.stringify(arr));
+  }
 
   // ── View switcher ──
   function showView(id) {
@@ -659,100 +634,45 @@ async function getWaitlist() {
   }
 
   // ── Signup submit ──
-  async function submitSignup() {
+  function submitSignup() {
+    const name  = document.getElementById('f-name').value.trim();
+    const phone = document.getElementById('f-phone').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const ig    = document.getElementById('f-ig').value.trim();
 
-  const name =
-    document.getElementById('f-name').value.trim();
+    let valid = true;
+    [['err-name', name], ['err-phone', phone], ['err-email', email], ['err-ig', ig]].forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (!val) { el.style.display = 'block'; valid = false; }
+      else { el.style.display = 'none'; }
+    });
+    if (!valid) return;
 
-  const phone =
-    document.getElementById('f-phone').value.trim();
+    const signups = getSignups();
+    if (signups.length >= MAX_SEATS) { showView('view-waitlist'); return; }
 
-  const email =
-    document.getElementById('f-email').value.trim();
-
-  const ig =
-    document.getElementById('f-ig').value.trim();
-
-  if (!name || !phone || !email || !ig) {
-    alert('Please complete all fields');
-    return;
+    signups.push({
+      seat: signups.length + 1,
+      name, phone, email,
+      ig: ig.startsWith('@') ? ig : '@' + ig,
+      paid: false,
+      date: new Date().toLocaleDateString()
+    });
+    saveSignups(signups);
+    showView('view-success');
   }
-
-  const signups = await getSignups();
-
-  if (signups.length >= MAX_SEATS) {
-    showView('view-waitlist');
-    return;
-  }
-
-  const seatNumber = signups.length + 1;
-
-  const { error } = await supabase
-    .from('signups')
-    .insert([
-      {
-        seat_number: seatNumber,
-        name: name,
-        phone: phone,
-        email: email,
-        instagram: ig.startsWith('@')
-          ? ig
-          : '@' + ig,
-        paid: false
-      }
-    ]);
-
-  if (error) {
-    console.error(error);
-    alert('Signup failed');
-    return;
-  }
-
-  showView('view-success');
-
-  updateSeatsDisplay();
-}
 
   // ── Waitlist submit ──
-  async function submitWaitlist() {
-
-  const name =
-    document.getElementById('wl-name').value.trim();
-
-  const email =
-    document.getElementById('wl-email').value.trim();
-
-  const instagram =
-    document.getElementById('wl-ig').value.trim();
-
-  if (!name || !email) {
-    alert('Complete all required fields');
-    return;
+  function submitWaitlist() {
+    const name  = document.getElementById('wl-name').value.trim();
+    const ig    = document.getElementById('wl-ig').value.trim();
+    const email = document.getElementById('wl-email').value.trim();
+    if (!name || !email) return;
+    const wl = getWaitlist();
+    wl.push({ name, ig: ig.startsWith('@') ? ig : '@' + ig, email, date: new Date().toLocaleDateString() });
+    saveWaitlist(wl);
+    document.querySelector('.waitlist-form').innerHTML = '<div style="padding:20px 0; color:var(--gold2); font-family:\'Bebas Neue\',sans-serif; font-size:24px; letter-spacing:0.05em;">You\'re on the list. 🔥</div><div style="font-size:12px;color:var(--dim);margin-top:6px;">We\'ll hit you when Gen 2 opens.</div>';
   }
-
-  const { error } = await supabase
-    .from('waitlist')
-    .insert([
-      {
-        name,
-        email,
-        instagram
-      }
-    ]);
-
-  if (error) {
-    console.error(error);
-    alert('Failed to join waitlist');
-    return;
-  }
-
-  document.querySelector('.waitlist-form').innerHTML =
-    `
-      <div style="padding:20px;color:var(--gold2)">
-        You're on the list 🔥
-      </div>
-    `;
-}
 
   // ── Admin login ──
   function adminLogin() {
@@ -771,89 +691,50 @@ async function getWaitlist() {
   }
 
   // ── Render dashboard ──
-  async function renderDash() {
+  function renderDash() {
+    const signups = getSignups();
+    const paid = signups.filter(s => s.paid).length;
+    document.getElementById('stat-signed').textContent = signups.length;
+    document.getElementById('stat-paid').textContent = paid;
+    document.getElementById('stat-remaining').textContent = Math.max(0, MAX_SEATS - signups.length);
 
-  const signups = await getSignups();
+    const tbody = document.getElementById('roster-body');
+    const emptyMsg = document.getElementById('empty-msg');
 
-  const paid =
-    signups.filter(
-      s => s.paid
-    ).length;
-
-  document.getElementById(
-    'stat-signed'
-  ).textContent =
-    signups.length;
-
-  document.getElementById(
-    'stat-paid'
-  ).textContent =
-    paid;
-
-  document.getElementById(
-    'stat-remaining'
-  ).textContent =
-    MAX_SEATS - signups.length;
-
-  const tbody =
-    document.getElementById(
-      'roster-body'
-    );
-
-  if (!signups.length) {
-    tbody.innerHTML = '';
-    return;
-  }
-
-  tbody.innerHTML =
-    signups.map(s => `
+    if (signups.length === 0) {
+      tbody.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+    tbody.innerHTML = signups.map((s, i) => `
       <tr>
-        <td>${s.seat_number}</td>
-        <td>${s.name}</td>
-        <td>${s.phone}</td>
-        <td>${s.email}</td>
-        <td>${s.instagram}</td>
+        <td><span class="seat-num">${String(s.seat).padStart(2,'0')}</span></td>
+        <td style="font-weight:500">${s.name}</td>
+        <td><span class="phone">${s.phone}</span></td>
+        <td style="font-size:12px;color:var(--dim)">${s.email}</td>
+        <td><span class="ig">${s.ig}</span></td>
         <td>
-          <button
-            class="paid-btn ${s.paid ? 'paid' : 'unpaid'}"
-            onclick="togglePaid(${s.id}, ${s.paid})"
-          >
+          <button class="paid-btn ${s.paid ? 'paid' : 'unpaid'}" onclick="togglePaid(${i})">
             ${s.paid ? '✓ Paid' : 'Unpaid'}
           </button>
         </td>
       </tr>
     `).join('');
-}
+  }
 
   // ── Toggle paid status ──
- async function togglePaid(id, currentPaid) {
-
-  const { error } =
-    await supabase
-      .from('signups')
-      .update({
-        paid: !currentPaid
-      })
-      .eq('id', id);
-
-  if (error) {
-    console.error(error);
-    return;
+  function togglePaid(i) {
+    const signups = getSignups();
+    signups[i].paid = !signups[i].paid;
+    saveSignups(signups);
+    renderDash();
   }
-
-  renderDash();
-}
 
   // ── Boot ──
- window.addEventListener(
-  'DOMContentLoaded',
-  async () => {
+  initCashApp();
+  updateSeatsDisplay();
+</script>
 
-    initCashApp();
-
-    await updateSeatsDisplay();
-
-  }
-);
 </body>
 </html>
