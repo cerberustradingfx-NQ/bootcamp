@@ -1,281 +1,265 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Rich Off Futures – Gen 1 Boot Camp</title>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
-
-<style>
-/* KEEP YOUR EXISTING CSS — unchanged for brevity */
-/* (your styles are fine, no need to rewrite them) */
-</style>
-</head>
-
-<body>
-
-<!-- ================= SIGNUP ================= -->
-<div id="view-signup" class="view active">
-  <h1>Rich Off Futures</h1>
-
-  <div>
-    <div>Seats Left: <span id="seats-display">10</span></div>
-    <div id="slots-visual"></div>
-  </div>
-
-  <input id="f-name" placeholder="Name">
-  <input id="f-phone" placeholder="Phone">
-  <input id="f-email" placeholder="Email">
-  <input id="f-ig" placeholder="Instagram">
-
-  <button onclick="submitSignup()">Reserve My Seat</button>
-</div>
-
-<!-- ================= SUCCESS ================= -->
-<div id="view-success" class="view">
-  <h2>You're In</h2>
-  <p>Send payment via CashApp: <span id="cashapp-display"></span></p>
-</div>
-
-<!-- ================= WAITLIST ================= -->
-<div id="view-waitlist" class="view">
-  <h2>Waitlist</h2>
-
-  <input id="wl-name" placeholder="Name">
-  <input id="wl-email" placeholder="Email">
-  <input id="wl-ig" placeholder="Instagram">
-
-  <button onclick="submitWaitlist()">Join Waitlist</button>
-</div>
-
-<!-- ================= ADMIN LOGIN ================= -->
-<div id="view-admin-login" class="view">
-  <input id="admin-pass" type="password" placeholder="Password">
-  <button onclick="adminLogin()">Login</button>
-  <p id="admin-err" style="display:none;color:red;">Wrong password</p>
-</div>
-
-<!-- ================= ADMIN DASH ================= -->
-<div id="view-admin-dash" class="view">
-  <h2>Admin Dashboard</h2>
-
-  <div>
-    Signed: <span id="stat-signed">0</span> |
-    Paid: <span id="stat-paid">0</span> |
-    Remaining: <span id="stat-remaining">10</span>
-  </div>
-
-  <table border="1">
-    <thead>
-      <tr>
-        <th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>IG</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="roster-body"></tbody>
-  </table>
-</div>
-
 <script>
-/* ================= CONFIG ================= */
-const SUPABASE_URL = "https://qpfobewbtynzonsnswhr.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+/* ══════════ CONFIG ══════════ */
+const SUPABASE_URL =
+  'https://qpfobewbtynzonsnswhr.supabase.co';
 
-const ADMIN_PASSWORD = "richoff2025";
-const CASHAPP_TAG = "$RichOffFutures";
+const SUPABASE_ANON_KEY =
+  'YOUR_ANON_KEY_HERE';
+
+const ADMIN_PASSWORD = 'richoff2025';
+const CASHAPP_TAG = '$richoffnqtrading';
 const MAX_SEATS = 10;
 
-/* ================= INIT SUPABASE ================= */
+/* ══════════ INIT SUPABASE ══════════ */
 const supabase = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
 
-/* ================= NAV ================= */
-function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-/* ================= GET SIGNUPS ================= */
+/* ══════════ STORAGE HELPERS ══════════ */
 async function getSignups() {
   const { data, error } = await supabase
     .from('signups')
     .select('*')
-    .order('seat_number', { ascending: true });
+    .order('seat_number');
 
   if (error) {
-    console.error("GET ERROR:", error.message);
+    console.error('GET SIGNUPS ERROR:', error);
     return [];
   }
 
   return data || [];
 }
 
-/* ================= UPDATE SEATS ================= */
+async function getWaitlist() {
+  const { data, error } = await supabase
+    .from('waitlist')
+    .select('*')
+    .order('created_at');
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/* ══════════ VIEW SWITCHER ══════════ */
+function showView(id) {
+  document.querySelectorAll('.view')
+    .forEach(v => v.classList.remove('active'));
+
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ══════════ SEATS DISPLAY (FIXED) ══════════ */
 async function updateSeatsDisplay() {
   const signups = await getSignups();
 
   const remaining = Math.max(0, MAX_SEATS - signups.length);
-  document.getElementById("seats-display").textContent = remaining;
+  document.getElementById('seats-display').textContent = remaining;
 
-  const slots = document.getElementById("slots-visual");
-  slots.innerHTML = "";
+  const sv = document.getElementById('slots-visual');
+  if (sv) {
+    sv.innerHTML = '';
 
-  for (let i = 0; i < MAX_SEATS; i++) {
-    const div = document.createElement("div");
-    div.style.width = "20px";
-    div.style.height = "10px";
-    div.style.margin = "2px";
-    div.style.display = "inline-block";
-    div.style.background = i < signups.length ? "#555" : "#222";
-    slots.appendChild(div);
+    for (let i = 0; i < MAX_SEATS; i++) {
+      const d = document.createElement('div');
+      d.className = 'sv ' + (i < signups.length ? 'filled' : 'open');
+      sv.appendChild(d);
+    }
   }
 
-  if (remaining === 0) showView("view-waitlist");
+  if (remaining === 0) showView('view-waitlist');
 }
 
-/* ================= SIGNUP ================= */
+/* ══════════ CASHAPP INIT ══════════ */
+function initCashApp() {
+  ['cashapp-display', 'cashapp-remind-display']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = CASHAPP_TAG;
+    });
+}
+
+/* ══════════ SIGNUP SUBMIT (FIXED) ══════════ */
 async function submitSignup() {
 
-  const name = document.getElementById("f-name").value.trim();
-  const phone = document.getElementById("f-phone").value.trim();
-  const email = document.getElementById("f-email").value.trim();
-  const ig = document.getElementById("f-ig").value.trim();
+  const name =
+    document.getElementById('f-name').value.trim();
+
+  const phone =
+    document.getElementById('f-phone').value.trim();
+
+  const email =
+    document.getElementById('f-email').value.trim();
+
+  const ig =
+    document.getElementById('f-ig').value.trim();
 
   if (!name || !phone || !email || !ig) {
-    alert("Fill all fields");
+    alert('Please complete all fields');
     return;
   }
 
   const signups = await getSignups();
 
   if (signups.length >= MAX_SEATS) {
-    showView("view-waitlist");
+    showView('view-waitlist');
     return;
   }
 
-  const seat_number = signups.length + 1;
+  const seatNumber = signups.length + 1;
 
   const { error } = await supabase
-    .from("signups")
+    .from('signups')
     .insert([{
-      seat_number,
+      seat_number: seatNumber,
       name,
       phone,
       email,
-      instagram: ig.startsWith("@") ? ig : "@" + ig,
+      instagram: ig.startsWith('@') ? ig : '@' + ig,
       paid: false
     }]);
 
   if (error) {
-    console.error("INSERT ERROR:", error.message);
+    console.error('INSERT ERROR:', error);
     alert(error.message);
     return;
   }
 
-  document.getElementById("cashapp-display").textContent = CASHAPP_TAG;
-
-  showView("view-success");
+  showView('view-success');
   updateSeatsDisplay();
 }
 
-/* ================= WAITLIST ================= */
+/* ══════════ WAITLIST SUBMIT ══════════ */
 async function submitWaitlist() {
 
-  const name = document.getElementById("wl-name").value.trim();
-  const email = document.getElementById("wl-email").value.trim();
-  const ig = document.getElementById("wl-ig").value.trim();
+  const name =
+    document.getElementById('wl-name').value.trim();
+
+  const email =
+    document.getElementById('wl-email').value.trim();
+
+  const instagram =
+    document.getElementById('wl-ig').value.trim();
 
   if (!name || !email) {
-    alert("Fill required fields");
+    alert('Complete required fields');
     return;
   }
 
   const { error } = await supabase
-    .from("waitlist")
-    .insert([{ name, email, instagram: ig }]);
+    .from('waitlist')
+    .insert([{
+      name,
+      email,
+      instagram
+    }]);
 
   if (error) {
-    console.error(error.message);
-    alert(error.message);
+    console.error(error);
+    alert('Failed to join waitlist');
     return;
   }
 
-  alert("You're on the waitlist 🔥");
+  document.querySelector('.waitlist-form').innerHTML =
+    `<div style="padding:20px;color:var(--gold2)">
+      You're on the list 🔥
+    </div>`;
 }
 
-/* ================= ADMIN ================= */
+/* ══════════ ADMIN LOGIN ══════════ */
 function adminLogin() {
-  const pass = document.getElementById("admin-pass").value;
+  const pass = document.getElementById('admin-pass').value;
 
-  if (pass !== ADMIN_PASSWORD) {
-    document.getElementById("admin-err").style.display = "block";
-    return;
+  if (pass === ADMIN_PASSWORD) {
+    document.getElementById('admin-err').style.display = 'none';
+    renderDash();
+    showView('view-admin-dash');
+  } else {
+    document.getElementById('admin-err').style.display = 'block';
   }
-
-  document.getElementById("admin-err").style.display = "none";
-  renderDash();
-  showView("view-admin-dash");
 }
 
-/* ================= DASHBOARD ================= */
+function adminLogout() {
+  document.getElementById('admin-pass').value = '';
+  showView('view-signup');
+}
+
+/* ══════════ DASHBOARD (FIXED) ══════════ */
 async function renderDash() {
 
   const signups = await getSignups();
-  const paid = signups.filter(s => s.paid).length;
 
-  document.getElementById("stat-signed").textContent = signups.length;
-  document.getElementById("stat-paid").textContent = paid;
-  document.getElementById("stat-remaining").textContent = MAX_SEATS - signups.length;
+  const paid =
+    signups.filter(s => s.paid).length;
 
-  const tbody = document.getElementById("roster-body");
-  tbody.innerHTML = "";
+  document.getElementById('stat-signed').textContent =
+    signups.length;
 
-  signups.forEach(s => {
-    const row = document.createElement("tr");
+  document.getElementById('stat-paid').textContent =
+    paid;
 
-    row.innerHTML = `
+  document.getElementById('stat-remaining').textContent =
+    MAX_SEATS - signups.length;
+
+  const tbody =
+    document.getElementById('roster-body');
+
+  tbody.innerHTML = '';
+
+  if (!signups.length) {
+    document.getElementById('empty-msg').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('empty-msg').style.display = 'none';
+
+  tbody.innerHTML = signups.map(s => `
+    <tr>
       <td>${s.seat_number}</td>
       <td>${s.name}</td>
       <td>${s.phone}</td>
       <td>${s.email}</td>
       <td>${s.instagram}</td>
       <td>
-        <button onclick="togglePaid(${s.id}, ${s.paid})">
-          ${s.paid ? "PAID" : "UNPAID"}
+        <button
+          class="paid-btn ${s.paid ? 'paid' : 'unpaid'}"
+          onclick="togglePaid(${s.id}, ${s.paid})"
+        >
+          ${s.paid ? '✓ Paid' : 'Unpaid'}
         </button>
       </td>
-    `;
-
-    tbody.appendChild(row);
-  });
+    </tr>
+  `).join('');
 }
 
-/* ================= TOGGLE PAID ================= */
-async function togglePaid(id, paid) {
+/* ══════════ TOGGLE PAID ══════════ */
+async function togglePaid(id, currentPaid) {
 
   const { error } = await supabase
-    .from("signups")
-    .update({ paid: !paid })
-    .eq("id", id);
+    .from('signups')
+    .update({ paid: !currentPaid })
+    .eq('id', id);
 
   if (error) {
-    console.error(error.message);
+    console.error(error);
     return;
   }
 
   renderDash();
 }
 
-/* ================= BOOT ================= */
-window.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("cashapp-display").textContent = CASHAPP_TAG;
+/* ══════════ BOOT SEQUENCE (FIXED) ══════════ */
+window.addEventListener('DOMContentLoaded', async () => {
+
+  initCashApp();
   await updateSeatsDisplay();
+
 });
 </script>
-
-</body>
-</html>
